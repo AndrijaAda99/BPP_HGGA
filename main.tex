@@ -1,0 +1,52 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[serbian]{babel}
+\usepackage[T2A]{fontenc} 
+\usepackage[utf8]{inputenc} 
+\usepackage[margin=1in]{geometry}
+\usepackage{multicol} 
+\usepackage{csquotes}
+\usepackage[nottoc]{tocbibind}
+\usepackage[backend=biber]{biblatex}
+\usepackage{authblk}
+
+\addbibresource{sample.bib}
+
+\title{Minimal Bin Packing}
+\author{Andrija Urošević\\\textit{Univerzitet u Beogradu, Matematicki fakultet}\\\texttt{andrija.urosevic@protonmail.com}}
+\date{Decembar 2021.}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Ovde ide Sažetak
+\end{abstract}
+
+\begin{multicols}{2}
+
+\section{Uvod}
+
+
+
+Ovo je uvod.\cite{test}
+Pipeline testing
+
+\section{Rešenje}
+
+Ovo je resenje.
+
+\section{Rezultati}
+
+Ovo je rezultat.
+
+\section{Zaključak}
+
+Ovo je zakljucak.
+
+\printbibliography[title={Literatura}]
+
+\end{multicols}
+
+\end{document}
