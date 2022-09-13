@@ -1,5 +1,4 @@
-\documentclass[a4paper,12pt]{article}
-
+\documentclass[a4paper,12pt,twocolumn]{article}
 \usepackage[serbian]{babel}
 \usepackage[T2A]{fontenc} 
 \usepackage[utf8]{inputenc} 
@@ -9,8 +8,9 @@
 \usepackage[nottoc]{tocbibind}
 \usepackage[backend=biber]{biblatex}
 \usepackage{authblk}
+\usepackage{amsfonts}
 
-\addbibresource{sample.bib}
+\addbibresource{main.bib}
 
 \title{Minimal Bin Packing}
 \author{Andrija Urošević\\\textit{Univerzitet u Beogradu, Matematicki fakultet}\\\texttt{andrija.urosevic@protonmail.com}}
@@ -24,29 +24,59 @@
     Ovde ide Sažetak
 \end{abstract}
 
-\begin{multicols}{2}
-
 \section{Uvod}
 
+\emph{Problem minimalnog pakovanja u prostoru} 
+(engl.\ Minimal Bin Packing Problem) podrazumeva pokovanje objekata 
+različitih zapremina u konačno mnogo kontejnera sa ciljem da se minimizuje
+broj potrebnih kontejnera za skladištenje datih objekata. Formalno, neka je
+dat konačan skup elemenata $I$, neka svaki element $i \in I$ ima veličinu 
+$s(i) \in \mathbb{Z}^{+}$, i neka je dat kapacitet kontejnera $B$. Treba naći
+particiju $\{I_1, I_2, \ldots, I_k\}$ skupa elemenata $I$, tako da je 
+$\sum_{i \in I_k} s(i) \leq B$ i broj kontejnera $k$ najmanji moguć. 
+Ovaj problem je $NP$-težak\cite{gj80}. Njegova varijanta problema odlučivanja:
+Da li za broj kontejnera $k$ postoji particija $\{I_1, I_2, \ldots, I_k\}$
+skupa elemenata $I$, tako da $\sum_{i \in I_k} s(i) \leq B$? 
 
+\emph{Jednodimenzioni problem minimalnog pakovanje} je problem minimalnog 
+pakovanja u prostoru gde su veličine elemenata $s(i) \in \mathbb{Z}$ i 
+gde je kapacitet kontejnera $B \in \mathbb{Z}$. Optimalan vrednost broj 
+kontejnera $k$ za dati skup elemenata $I$, obeležavamo i sa $OPT(I)$.
+U literaturi se koristi i normalizovani oblik problema. Naime, $B = 1$ i
+$s(i) \in [0, 1]$ za svaki element $i \in I$ (normalizujemo instance tako što
+podelimo veličinu $s(i)$ sa $B$, a $B$ postavimo na $1$). 
 
-Ovo je uvod.\cite{test}
-Pipeline testing
+Problem jednodimenzionog minimalnog pakovanja napadamo
+koristeći genetski algoritam sa specijalizovanom reprezentacijom i 
+specijalizovanim operatorima genetskog algoritma. Trenutno najbolja 
+polinomijalna aproksimativna rešenja upadaju u $\frac{3}{2} OPT(I)$\cite{sl94} 
+i $\frac{71}{60} OPT(I)$\cite{jg85, yz95}. Ovaj rad, eksperimentalno, pokušava 
+da upadne u ove granice.
 
-\section{Rešenje}
+\section{Genetski algoritam za minimalno pokovanje}
 
-Ovo je resenje.
+\subsection{Reprezentacija jedinke}
+
+\subsection{Operator ukrštanja}
+
+\subsection{Operator mutacija}
 
 \section{Rezultati}
 
-Ovo je rezultat.
+Algoritam je pokrenut na računaru sa sledećim specifikacijama: 
+CPU --- Intel Core i5--2520M @ $4 \times 3.2GHz$,
+RAM --- 7836MiB,
+Kernel --- x86\_64 Linux 5.16.15-arch1--1,
+g++ --- (GCC) 11.2.0.
+
+
 
 \section{Zaključak}
 
 Ovo je zakljucak.
 
-\printbibliography[title={Literatura}]
+\nocite{*}
 
-\end{multicols}
+\printbibliography[title={Literatura}]
 
 \end{document}
