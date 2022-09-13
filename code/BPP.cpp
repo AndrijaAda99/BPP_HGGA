@@ -371,6 +371,27 @@ public:
         std::cout << "Insert removed: " << std::endl;
     };
 
+    void mutation(double probability) 
+    {
+        int n = m_chromosome.size();
+
+        std::vector<Item*> removed_items;
+        auto bin = m_chromosome.begin();
+        while (bin != m_chromosome.end()) {
+            if (std::rand() / (double) RAND_MAX < probability) {
+                for (auto item : bin->items()) {
+                    removed_items.push_back(item);
+                }
+                bin = m_chromosome.erase(bin);
+            } else {
+                bin++;
+            }
+        }
+        
+        sort_items(removed_items);
+        insert_removed_items(m_chromosome, removed_items);
+    };
+
     double calculate_fitness(int k=2)
     {
         m_fitness = 0;
@@ -538,26 +559,21 @@ int main(int argc, const char *argv[])
     bin_packing->solve();
     bin_packing->print_solution();
 
-    auto chromosome1 = new Chromosome(items, bin_capacity);
-    auto chromosome2 = new Chromosome(items, bin_capacity);
+    auto chromosome = new Chromosome(items, bin_capacity);
 
-    std::cout << *chromosome1 << std::endl;
-    std::cout << *chromosome2 << std::endl;
+    std::cout << *chromosome << std::endl;
 
-    chromosome1->crossover(chromosome2);
+    chromosome->mutation(1);
     
-    std::cout << *chromosome1 << std::endl;
-    std::cout << *chromosome2 << std::endl;
+    std::cout << *chromosome << std::endl;
 
     for (auto item : items) {
         delete item;
     }
 
-    delete chromosome2;
-    delete chromosome1;
+    delete chromosome;
 
     delete bin_packing;
-        
 
     return 0;
 }
