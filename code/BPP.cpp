@@ -6,6 +6,16 @@
 #include <limits>
 #include <random>
 #include <cmath>
+#include <chrono>
+
+#define EXIT_CHECK(flag, msg) { \
+    if (flag) { \
+        std::cout << msg << std::endl; \
+        std::exit(EXIT_FAILURE); \
+    } \
+}
+
+//#define DEBUG_PRINT
 
 class Item
 {
@@ -137,6 +147,8 @@ public:
     BinPacking(const std::vector<Item*> &items, const int bin_capacity)
         : m_items(items)
         , m_bin_capacity(bin_capacity)
+        , m_duration()
+        , m_solved(false)
     {
 
     }; 
@@ -157,10 +169,17 @@ public:
 
     virtual void print_solution() = 0;
 
+    virtual const int solution() = 0;
+
+    virtual const std::string algorithm_type() = 0;
+
+    constexpr int duration() const { return m_duration.count(); };
+
 protected:
     std::vector<Item*> m_items;
     int m_bin_capacity;
-
+    std::chrono::microseconds m_duration;
+    bool m_solved;
 };
 
 class BruteForceBinPacking: public BinPacking
@@ -188,11 +207,17 @@ public:
 
     void solve() override
     {
-         brute_force(0);
+        auto start = std::chrono::high_resolution_clock::now();
+        brute_force(0);
+        auto end = std::chrono::high_resolution_clock::now();
+        m_duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        m_solved = true;
     };
 
     void print_solution() override
     {
+        EXIT_CHECK(!m_solved, "Bin Packing is not solved!");
+
         int i = 1;
         for (const auto bin : m_best_bins) {
             std::cout << "Bin #" << i << ":" << std::endl
@@ -203,6 +228,17 @@ public:
         std::cout << "MinBinPacking = " << m_best_solution << std::endl;
     };
 
+    const int solution() override
+    {
+        EXIT_CHECK(!m_solved, "Bin Packing is not solved!");
+
+        return m_best_solution;
+    };
+
+    const std::string algorithm_type() override
+    {
+        return "BF";
+    };
 
 private:
     int count_filled_bins() 
@@ -291,8 +327,12 @@ private:
     };
 
 public:
-    void crossover(Chromosome* other) 
+    void crossover(Chromosome* other, double probability) 
     {
+        if (std::rand() / (double) RAND_MAX > probability) {
+            return;
+        }
+
         int n = m_chromosome.size();
         int m = other->m_chromosome.size();
 
@@ -323,18 +363,17 @@ public:
             cloned_bins_2.push_back(Bin(*bin));
         };
 
-        std::cout << first_break_point_1 << " " << second_break_point_1 << std::endl;
-        std::cout << first_break_point_2 << " " << second_break_point_2 << std::endl;
-
         m_chromosome.insert(m_chromosome.begin() + second_break_point_1,
                             cloned_bins_1.begin(), cloned_bins_1.end());
 
         other->m_chromosome.insert(other->m_chromosome.begin() + first_break_point_2,
                                    cloned_bins_2.begin(), cloned_bins_2.end());
 
+#ifdef DEBUG_PRINT
         std::cout << "Insert clones: " << std::endl;
         std::cout << *this << std::endl;
         std::cout << *other << std::endl;
+#endif
  
         auto removed_items_1 = remove_duplicate_bins(
                 cloned_bins_1, 
@@ -348,13 +387,16 @@ public:
                 first_break_point_2, 
                 first_break_point_2 + (second_break_point_1 - first_break_point_1)
             );
+#ifdef DEBUG_PRINT
         std::cout << "Remove duplicates: " << std::endl;
         std::cout << *this << std::endl;
         std::cout << *other << std::endl;
+#endif
 
         sort_items(removed_items_1);
         sort_items(removed_items_2);
 
+#ifdef DEBUG_PRINT
         std::cout << "Removed items: " << std::endl;
         for (auto item : removed_items_1) {
             std::cout << item->weight() << " ";
@@ -364,11 +406,16 @@ public:
             std::cout << item->weight() << " ";
         }
         std::cout << std::endl;
+#endif
 
         insert_removed_items(m_chromosome, removed_items_1);
         insert_removed_items(other->m_chromosome, removed_items_2);
 
+#ifdef DEBUG_PRINT
         std::cout << "Insert removed: " << std::endl;
+        std::cout << *this << std::endl;
+        std::cout << other << std::endl;
+#endif
     };
 
     void mutation(double probability) 
@@ -403,6 +450,10 @@ public:
 
         return m_fitness;
     };
+
+    double fitness() { return m_fitness; };
+
+    const std::vector<Bin> &chromosome() { return m_chromosome; };
 
 private:
     void insert_removed_items(std::vector<Bin> &bins, 
@@ -503,18 +554,158 @@ std::ostream &operator<<(std::ostream &os, Chromosome &chromosome)
 class GeneticAlgorithmBinPacking: public BinPacking
 {
 public:
-    GeneticAlgorithmBinPacking();
-    virtual ~GeneticAlgorithmBinPacking();
-
-    void solve() override
+    GeneticAlgorithmBinPacking(const std::vector<Item*> &items, 
+                               const int bin_capacity,
+                               const int population_size=100,
+                               const int selection_size=50,
+                               const int tournaments_size=5,
+                               const int num_iterations=50,
+                               const double crossover_probability=1.0,
+                               const double mutation_probability=0.66)
+        : BinPacking(items, bin_capacity)
+        , m_population_size(population_size)
+        , m_selection_size(selection_size)
+        , m_tournament_size(tournaments_size)
+        , m_num_iterations(num_iterations)
+        , m_iter(0)
+        , m_crossover_probability(crossover_probability)
+        , m_mutation_probability(mutation_probability)
+        , m_best_solution(nullptr)
     {
 
     };
 
-protected:
+    virtual ~GeneticAlgorithmBinPacking()
+    {
+        delete m_best_solution;
+    };
+
+    void solve() override
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        genetic_alogorithm();
+        auto end = std::chrono::high_resolution_clock::now();
+        m_duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        m_solved = true;
+    };
+
+    void print_solution() override
+    {
+        EXIT_CHECK(!m_solved, "Pin Packing is not solved!");
+
+        const auto bins = m_best_solution->chromosome();
+
+        int i = 1;
+        for (const auto bin : bins) {
+            std::cout << "Bin #" << i << ":" << std::endl
+                      << bin << std::endl;
+            i++;
+        }
+
+        std::cout << "MinBinPacking = " << bins.size() << std::endl;
+    };
+
+    const int solution() override
+    {
+        EXIT_CHECK(!m_solved, "Pin Packing is not solved!");
+
+        return m_best_solution->chromosome().size();
+    };
+
+    const std::string algorithm_type() override
+    {
+        return "GA";
+    };
+
+private:
+
+    Chromosome* selection(const std::vector<Chromosome*> &population) 
+    {
+        const int n = population.size();
+
+        Chromosome* winner(nullptr);
+        for (int i = 0; i < m_tournament_size; i++) {
+            const int rand_index = rand() % n;
+            if (winner == nullptr) {
+                winner = population[rand_index];
+            } else {
+                if (winner->fitness() < population[rand_index]->fitness()) {
+                    winner = population[rand_index];
+                }
+            }
+        }
+
+        return winner; 
+    };
+
+    void sort_chromosomes(std::vector<Chromosome*> &population) 
+    {
+        std::sort(
+            population.begin(), population.end(), 
+            [](auto chromosome1, auto chromosome2) {
+                return chromosome1->fitness() > chromosome2->fitness();
+            }
+        );
+    };
+
+    bool stop_cond() 
+    {
+        if (m_iter < m_num_iterations) {
+            return true;
+        }
+
+        return false;
+    };
+
+    void genetic_alogorithm()
+    {
+        std::vector<Chromosome*> population;
+        for (int i = 0; i < m_population_size; i++) {
+            Chromosome* chromosome = new Chromosome(m_items, m_bin_capacity);
+            chromosome->calculate_fitness();
+            population.push_back(chromosome);
+        }
+        sort_chromosomes(population);
+
+        m_iter = 0;
+        while(!stop_cond()) {
+            for (int i = 0; i < m_selection_size; i++) {
+                auto child1 = selection(population);
+                auto child2 = selection(population);
+                if (child1 == child2) {
+                    continue;
+                }
+                child1->crossover(child2, m_crossover_probability);
+
+                child1->mutation(m_mutation_probability);
+                child2->mutation(m_mutation_probability);
+
+                child1->calculate_fitness();
+                child2->calculate_fitness();
+            }
+            sort_chromosomes(population);
+
+            m_iter++;
+        }
+        
+        m_best_solution = population[0];
+
+        for (int i = 1; i < m_population_size; i++) {
+            delete population[i];
+        }
+    };
 
 private: 
-    
+    int m_population_size;
+    int m_selection_size;
+    int m_tournament_size;
+    int m_num_iterations;
+    int m_iter;
+
+    double m_crossover_probability;
+    double m_mutation_probability;
+
+    Chromosome *m_best_solution;
 };
 
 void load_data(const std::string &file_name, 
@@ -539,41 +730,72 @@ void load_data(const std::string &file_name,
     file.close();
 }
 
+void save_results(const std::string &file_name, 
+                  const std::string &instance_name,
+                  BinPacking* bin_packing)
+{
+    std::ofstream file;
+
+    file.open(file_name, std::ofstream::app);
+
+    file << instance_name << "," 
+         << bin_packing->algorithm_type() << "," 
+         << bin_packing->solution() << ","
+         << bin_packing->duration() << std::endl;
+
+    file.close();
+}
+
 
 int main(int argc, const char *argv[])
 {
+    std::string in_file(argv[1]);
+    std::string out_file(argv[2]);
+
+    auto instance_name = in_file.substr(in_file.find_last_of("/") + 1);
+    instance_name.erase(instance_name.find(".BPP"));
+
     std::vector<Item*> items;
     int bin_capacity;
 
-    load_data(argv[1], items, bin_capacity);
+    load_data(in_file, items, bin_capacity);
 
+#ifdef DEBUG_PRINT
     std::cout << "Bin Capacity: " << bin_capacity << std::endl;
     std::cout << "items: [ ";
     for (const auto item : items) {
         std::cout << item->weight() << " ";
     }
     std::cout << "]" << std::endl;
+#endif
 
-    auto bin_packing = new BruteForceBinPacking(items, bin_capacity);
+    if (argc > 3 && std::string(argv[3]) == std::string("-b")) {
+        auto bin_packing = new BruteForceBinPacking(items, bin_capacity);
 
-    bin_packing->solve();
-    bin_packing->print_solution();
+        bin_packing->solve();
+#ifdef DEBUG_PRINT
+        bin_packing->print_solution();
+#endif
 
-    auto chromosome = new Chromosome(items, bin_capacity);
+        save_results(out_file, instance_name, bin_packing);
 
-    std::cout << *chromosome << std::endl;
+        delete bin_packing;
+    } else {
+        auto bin_packing = new GeneticAlgorithmBinPacking(items, bin_capacity);
 
-    chromosome->mutation(1);
-    
-    std::cout << *chromosome << std::endl;
+        bin_packing->solve();
+#ifdef DEBUG_PRINT
+        bin_packing->print_solution();
+#endif
+
+        save_results(out_file, instance_name, bin_packing);
+
+        delete bin_packing;
+    }
 
     for (auto item : items) {
         delete item;
     }
-
-    delete chromosome;
-
-    delete bin_packing;
 
     return 0;
 }
