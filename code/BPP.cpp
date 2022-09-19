@@ -178,7 +178,7 @@ public:
 protected:
     std::vector<Item*> m_items;
     int m_bin_capacity;
-    std::chrono::microseconds m_duration;
+    std::chrono::milliseconds m_duration;
     bool m_solved;
 };
 
@@ -210,7 +210,7 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
         brute_force(0);
         auto end = std::chrono::high_resolution_clock::now();
-        m_duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        m_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         m_solved = true;
     };
 
@@ -585,7 +585,7 @@ public:
         auto start = std::chrono::high_resolution_clock::now();
         genetic_alogorithm();
         auto end = std::chrono::high_resolution_clock::now();
-        m_duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        m_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         m_solved = true;
     };
 

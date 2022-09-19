@@ -1,0 +1,13 @@
+name,alg,sol,time,alg,sol,time,time_diff
+EZ0,BF,3,0,GA,3,0,0
+EZ1,BF,3,0,GA,3,1,-1
+EZ2,BF,3,0,GA,3,0,0
+EZ3,BF,2,1,GA,2,0,1
+EZ4,BF,2,1,GA,2,0,1
+EZ5,BF,3,0,GA,3,0,0
+EZ6,BF,3,1,GA,3,0,1
+EZ7,BF,2,24,GA,2,0,24
+EZ8,BF,5,1,GA,5,1,0
+EZ9,BF,2,323,GA,2,0,323
+average,,,35.1,,,0.2,34.9
+median,,,1,,,0,0.5
