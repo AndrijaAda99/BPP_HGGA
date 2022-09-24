@@ -1,4 +1,4 @@
-name,alg_type,time(ms),sol,opt_sol,diff,71/60opt,71/60diff
+name,alg,time,sol,opt,diff,oopt,odiff
 HARD0,GA,13,66,56,10,66,0
 HARD1,GA,15,66,57,9,67,1
 HARD2,GA,14,66,56,10,66,0
@@ -9,5 +9,3 @@ HARD6,GA,11,66,57,9,67,1
 HARD7,GA,13,64,55,9,65,1
 HARD8,GA,15,66,57,9,67,1
 HARD9,GA,12,66,56,10,66,0
-average,,13.2,,,9.5,,0.5
-median,,13.5,,,9.5,,0.5
